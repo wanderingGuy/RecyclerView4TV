@@ -8,6 +8,8 @@ import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
@@ -38,6 +40,7 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
     private int mCurrentScrollMode = SCROLL_MODE_DEFAULT;
     private int mFocusInterceptMode = FOCUS_INTERCEPT_DEFAULT;
     private OnPullListListener onPullListListener;
+    protected RecyclerView mRecyclerView;
 
     public BaseLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
         super(context, orientation, reverseLayout);
@@ -85,12 +88,14 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
     }
 
     @Override
+    public void onAttachedToWindow(RecyclerView view) {
+        super.onAttachedToWindow(view);
+        mRecyclerView = view;
+    }
+
+    @Override
     public View onInterceptFocusSearch(View focused, int direction) {
-        Log.v(TAG, "onInterceptFocusSearch direction:" + direction);
-        if (!(focused.getLayoutParams() instanceof RecyclerView.LayoutParams)) {
-            return super.onInterceptFocusSearch(focused, direction);
-        }
-        Log.v(TAG, "onInterceptFocusSearch view:" + focused);
+        Log.v(TAG, "onInterceptFocusSearch direction:" + direction + " view:" + focused);
         if (mFocusInterceptMode == FOCUS_INTERCEPT_DEFAULT) {
             return super.onInterceptFocusSearch(focused, direction);
         } else if (mFocusInterceptMode == FOCUS_INTERCEPT_HORIZONTAL_EDGE) {
@@ -127,7 +132,11 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
      * @return
      */
     private boolean isReachEdge(int direction, View currentFocusView) {
-        int currentPos = getPosition(currentFocusView);
+        View directChild = findDirectChild(currentFocusView, mRecyclerView);
+        if(directChild == null) {
+            return false;
+        }
+        int currentPos = getPosition(directChild);
         int orientation = getOrientation();
 
         if (currentPos == 0) {
@@ -149,6 +158,26 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
             }
         }
         return false;
+    }
+
+    /**
+     * focusVie可能并非recyclerView的直接子view，此时如果调用{@link #getPosition(View)}会导致崩溃
+     * @param focused
+     * @param targetParent
+     * @return
+     */
+    private View findDirectChild(View focused, ViewGroup targetParent) {
+        if (focused.getParent() == targetParent) {
+            return focused;
+        }
+        ViewParent parent = focused.getParent();
+        while (parent != null) {
+            if (parent.getParent() == targetParent) {
+                return (View)parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
     }
 
     private void notifyPullListCallback(int direction){
@@ -262,7 +291,7 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
             offScreenTop = Math.min(0, childTop - (parentBottom - rect.height()) / 2 - (itemBottomDecor - itemTopDecor) / 2 - verticalOffset);
             offScreenBottom = Math.max(0, childTop - (parentBottom - rect.height()) / 2 - (itemBottomDecor - itemTopDecor) / 2 + verticalOffset);
         } else {
-            throw new IllegalArgumentException("scroll mode must be one of SCROLL_MODE_DEFAULT, SCROLL_MODE_CENTER or SCROLL_MODE_SPECIFIED");
+            throw new IllegalArgumentException("scroll mode must be one of SCROLL_MODE_DEFAULT SCROLL_MODE_CENTER, SCROLL_MODE_SPECIFIED");
         }
 
         // Favor the "start" layout direction over the end when bringing one side or the other
@@ -284,7 +313,7 @@ public class BaseLinearLayoutManager extends LinearLayoutManager {
         out[0] = dx;
         out[1] = dy;
 
-        Log.v(TAG, "getChildRectangleOnScreenScrollAmount");
+        Log.v(TAG, "----------getChildRectangleOnScreenScrollAmount----------");
         Log.v(TAG, "child id:" + child.getId() + " rect:" + rect.toString());
         Log.v(TAG, "child left:" + child.getLeft() + " top:" + child.getTop());
         Log.v(TAG, "child right:" + child.getRight() + " bottom:" + child.getBottom());

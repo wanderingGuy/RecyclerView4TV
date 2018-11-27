@@ -3,6 +3,7 @@ package com.bftv.wanderingguy.recyclerview.widgets;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v17.leanback.widget.ObjectAdapter;
+import android.support.v7.widget.LinearLayoutManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -146,4 +147,39 @@ public class LinearRecyclerView extends BaseRecyclerView {
             }
         }
     }
+
+    /**
+     * 下一页
+     */
+    public void nextPage(){
+        LinearLayoutManager layoutManager = (LinearLayoutManager) getLayoutManager();
+        int lastCompleteVisible = layoutManager.findLastCompletelyVisibleItemPosition();
+        int lastVisible = layoutManager.findLastVisibleItemPosition();
+        Log.i("testRV", "next page lastCompleteVisible:"+lastCompleteVisible+" lastVisible:"+lastVisible);
+
+        View itemView = layoutManager.findViewByPosition(lastVisible);
+        if (itemView.getLayoutParams() instanceof LayoutParams) {
+            Log.i("testRV", "next page itemView:"+itemView.getLayoutParams());
+        }
+        if(lastCompleteVisible == lastVisible) {
+            //当前最后一个item就是最后一个完全显示的
+            int right = itemView.getRight() + 15;
+            Log.i("testRV", "next page right:"+right+" itemView:"+itemView.getId());
+            smoothScrollBy(right, 0);
+        } else {
+            //最后一个item是不完全显示的
+            int left = Math.max(itemView.getLeft() - 15, 0);
+            Log.i("testRV", "next page left:"+left+" itemView:"+itemView.getId());
+            smoothScrollBy(left, 0);
+
+        }
+    }
+
+    /**
+     * 上一页
+     */
+    public void previousPage(){
+
+    }
+
 }

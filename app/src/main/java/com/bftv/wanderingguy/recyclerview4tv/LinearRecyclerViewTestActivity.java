@@ -53,7 +53,7 @@ public class LinearRecyclerViewTestActivity extends FragmentActivity implements 
     private void initRecyclerView(int orientation) {
         if (orientation == OrientationHelper.HORIZONTAL) {
             BaseLinearLayoutManager linearLayoutManager = new BaseLinearLayoutManager(this, OrientationHelper.HORIZONTAL, false);
-            linearLayoutManager.setScrollMode(BaseLinearLayoutManager.SCROLL_MODE_CENTER, dp2px(LinearRecyclerViewTestActivity.this, 0));
+            linearLayoutManager.setScrollMode(BaseLinearLayoutManager.SCROLL_MODE_DEFAULT, dp2px(LinearRecyclerViewTestActivity.this, 0));
             linearLayoutManager.setFocusInterceptMode(BaseLinearLayoutManager.FOCUS_INTERCEPT_HORIZONTAL_EDGE);
 
             RecyclerView.ItemDecoration itemDecoration = new RecyclerView.ItemDecoration() {
@@ -119,11 +119,12 @@ public class LinearRecyclerViewTestActivity extends FragmentActivity implements 
                 }, 500);
             }
         });
+
     }
 
     private void setListData(int orientation) {
         arrayObjectAdapter = new BaseArrayObjectAdapter(orientation == OrientationHelper.HORIZONTAL ? new BaseVerItemPresenter() : new BaseHorItemPresenter());
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
             arrayObjectAdapter.add(i);
         }
         arrayObjectAdapter.addAdapterEventListener(new AdapterEventListener() {
@@ -163,5 +164,13 @@ public class LinearRecyclerViewTestActivity extends FragmentActivity implements 
             setListData(OrientationHelper.HORIZONTAL);
         }
 
+    }
+
+    public void nextPage(View view) {
+        linearRecyclerView.nextPage();
+    }
+
+    public void prePage(View view) {
+        linearRecyclerView.previousPage();
     }
 }
